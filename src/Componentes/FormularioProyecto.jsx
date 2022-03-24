@@ -1,17 +1,35 @@
-import React, { useState } from 'react'
+import React, { useState,useEffect } from 'react'
 import useProyectos from '../hooks/useProyectos'
+import { useParams } from 'react-router-dom'
 import Alerta from './Alerta'
 
 const FormularioProyecto = () => {
-
+    const params = useParams()
+    const[id,setId]=useState(null)
     const[nombre,setNombre]=useState('')
     const[descripcion,setDescripcion]=useState('')
     const[fechaEntrega,setFechaEntrega]=useState('')
     const[cliente,setCliente]=useState('')
     //obtenemos la funcion
+    const {mostrarAlerta,alerta,submitProyectos,proyecto,setProyecto}=useProyectos()
+    //primero esta mas rapido el effct que la consulta hacia la api 
+    //cambiamos params.id por proyecto nombre, si ya tenemos algo en  proyecto.mobre por ende ya tenemos 
+    //el objeto pryecto  listo
+    
 
-    const {mostrarAlerta,alerta,submitProyectos}=useProyectos()
-
+    useEffect(()=>{
+        if(params.id){
+          setId(proyecto._id)
+          setNombre(proyecto.nombre)
+          setDescripcion(proyecto.descripcion)
+          //cortamos hasta t y con 0 obtenemis todo lo que esta antes de la t
+          setFechaEntrega(proyecto.fechaEntrega?.split('T')[0])
+          setCliente(proyecto.cliente)
+        }else{
+            setProyecto({})
+        }
+     },[params])
+ 
     const handleSubmit = async e=>{
         e.preventDefault()
         if([nombre,descripcion,fechaEntrega,cliente].includes('')){
@@ -20,7 +38,8 @@ const FormularioProyecto = () => {
             return
         }
         //pasar los datos hacia provaider
-        await submitProyectos({nombre,descripcion,fechaEntrega,cliente})
+        await submitProyectos({id,nombre,descripcion,fechaEntrega,cliente})
+        setId(null)
         setNombre("")
         setCliente("")
         setFechaEntrega("")
@@ -56,7 +75,7 @@ const FormularioProyecto = () => {
 
             <input type="text"value={cliente} onChange={e =>setCliente(e.target.value)} className='border w-full p-2 mt-2 placeholder-gray-400 rounded-md'placeholder='Nombre del cliente' name="cliente" id="cliente" />
         </div>
-        <input className='bg-sky-600 w-full p-3 uppercase font-bold text-white rounded hover:bg-sky-700 transition-colors' type="submit" value="Crear Proyecto"  name="" id="" />
+        <input className='bg-sky-600 w-full p-3 uppercase font-bold text-white rounded hover:bg-sky-700 transition-colors' type="submit" value={proyecto._id?'Acualizar Proyecto':'Guardar Proyecto'}  name="" id="" />
         
         </form>
   )

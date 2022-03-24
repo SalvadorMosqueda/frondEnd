@@ -9,6 +9,7 @@ const AuthContext = createContext();
 const AuthProvider = ({children}) =>{
     //creamos el primero state global
     const[auth,setAuth]=useState({})
+    const[confirmado,setConfirmado]=useState(false)
     const [cargando, setCargando] = useState(true)
     const navigate = useNavigate()
     //comprobaremos si existe un token asi realizamos una auto autenticacion 
@@ -31,12 +32,12 @@ const AuthProvider = ({children}) =>{
 
               const {data}= await clienteAxios('/usuarios/perfil',config)
                 //guardamos la info del del usuario
-              setAuth(data)
-              navigate('/proyectos')
-
-
+                setAuth(data)
+                setConfirmado(true)        
+                navigate('/proyectos')      
             } catch (error) {
                     console.log(error)
+                    setAuth({})
                    
                 } finally{
                     //como la funcion tarda en ejecutarse te saca rapido de la ruta antes de comprobar ya con esto
@@ -46,6 +47,7 @@ const AuthProvider = ({children}) =>{
                 }
            }
        autenticarUsuario()
+       
     },[])
 
     return(
@@ -53,7 +55,9 @@ const AuthProvider = ({children}) =>{
         value={{
             setAuth,
             auth,
-            cargando
+            cargando,
+            confirmado
+            
             
         }}
         >

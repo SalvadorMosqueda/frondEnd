@@ -6,6 +6,8 @@ import useAuth from "../hooks/useAuth"
 
 
  const Login = () => {
+
+  const navigate = useNavigate()
    //state incial del formulario
    const[email,setEmail]=useState('')
    const[password,setPassword]=useState('')
@@ -26,8 +28,8 @@ import useAuth from "../hooks/useAuth"
         //guardamo el token en localstorage
        localStorage.setItem('token',data.token)
        //guardamos la if del usuario
-        
         setAuth(data)
+        navigate('/proyectos')
       } catch (error) {
         setAlerta({msg:error.response.data.msg,error:true})
       }

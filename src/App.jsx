@@ -10,6 +10,9 @@ import RutaProtegida from './Layouts/RutaProtegida';
 import Proyectos from './Paginas/Proyectos';
 import NuevoProyecto from './Paginas/NuevoProyecto';
 import { ProyectosProvider } from './context/ProyectosProvider';
+import Proyecto from './Paginas/Proyecto';
+import EditarProyecto from './Paginas/EditarProyecto';
+import NuevoColaborador from './Paginas/NuevoColaborador';
 
 function App() {
 
@@ -29,6 +32,9 @@ function App() {
         <Route path='/proyectos'element={<RutaProtegida/>}>
             <Route index element={<Proyectos/>}/>
             <Route path="crear-proyecto" element={<NuevoProyecto/>}  />
+            <Route path="nuevo-colaborador/:id" element={<NuevoColaborador/>}  />
+            <Route path=":id" element={<Proyecto/>}  />
+            <Route path="editar/:id" element={<EditarProyecto/>}  />
 
         </Route>
     </Routes>
