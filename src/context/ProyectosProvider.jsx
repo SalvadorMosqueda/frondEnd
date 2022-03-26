@@ -1,7 +1,9 @@
-
+import io from 'socket.io-client'
 import { useState, useEffect, createContext } from "react"
 import { useNavigate } from "react-router-dom";
 import clienteAxios from "../../config/ClienteAxios"
+
+let socket;
 
 const ProyectosContext = createContext();
 
@@ -15,6 +17,7 @@ const ProyectosProvider = ({ children }) => {
     const[modalFormularioTarea,setmodalFormularioTarea]=useState(false)
     const[modalliminarTarea,setmodalEliminarTarea]=useState(false)
     const[modalEliminarColaborador,setmodalEliminarColaborador]=useState(false)
+    const[buscador,setBuscador]=useState(false)
     const [tarea,setTarea]=useState({});
     const[colaborador,setColaborador]=useState({})
 
@@ -36,6 +39,7 @@ const ProyectosProvider = ({ children }) => {
                 }
                 const {data}= await clienteAxios('/proyectos',config)
                 setProyectos(data)
+                console.log(data)
             } catch (error) {
                 console.log(error)
                 
@@ -123,6 +127,12 @@ const ProyectosProvider = ({ children }) => {
             console.log(error)
         }
     }
+    //use efect para la conexion de io
+    useEffect(()=>{
+        //le decimos a que direccion nos queremos conectar
+        socket = io(import.meta.env.VITE_BACKEND_URL)
+    },[])
+
     const nuevoProyecto = async proyecto=>{
         try {
             const token = localStorage.getItem('token')
@@ -135,7 +145,12 @@ const ProyectosProvider = ({ children }) => {
                 }
             }
             const {data}= await clienteAxios.post('/proyectos',proyecto,config)
+            let proyectosActualizados = {...proyectos};
+            proyectosActualizados=[...proyectos,data]
+            setProyectos(proyectosActualizados)
             
+
+            console.log(proyectos)
             setAlerta({
                 msg:'proyecto creado correctamente',error:false
             })
@@ -145,11 +160,11 @@ const ProyectosProvider = ({ children }) => {
             setAlerta({})
 
             navigate('/proyectos')
-        },5000)
+        },3000)
     
             
         } catch (error) {
-            console.log(error)
+            console.log(error.response)
         }
     }
     const obtenerProyecto = async id =>{
@@ -166,7 +181,10 @@ const ProyectosProvider = ({ children }) => {
             }
             const {data}=await clienteAxios(`/proyectos/${id}`,config)
             setProyecto(data)
+            setAlerta({})
         } catch (error) {
+            //si no tiene los permisos del proyecto lo enviamos a proyectos
+            navigate('/proyectos')
             setAlerta({
                 msg: error.response.data.msg,
                 error:true
@@ -234,6 +252,9 @@ const ProyectosProvider = ({ children }) => {
             setProyecto(proyectoActualizado)
             setAlerta({})
             setmodalFormularioTarea(false)
+            //socket io
+            //cuando se cree una tarea pasaremos la tarea al socket
+            socket.emit('nueva tarea',data)
         } catch (error) {
             console.log(error)
         }
@@ -367,9 +388,45 @@ const ProyectosProvider = ({ children }) => {
            
        }
     }
+    const  completarTarea = async id=>{
+        try {
+                const token = localStorage.getItem('token')
+                if(!token)return
+                
+                const config={
+                    headers:{
+                        "Content-type": "application/json",
+                        Authorization: `Bearer ${token} `
+                    }
+                }
+                const {data}= await clienteAxios.post(`/tareas/estado/${id}`,{},config)
+                const proyectoActualiado = {...proyecto}
+                proyectoActualiado.tareas = proyectoActualiado.tareas.map(tareaState=>tareaState._id===data._id? data:tareaState)
+                setProyecto(proyectoActualiado)
+                setTarea({})
+        } catch (error) {
+            console.log(error.response)
+        }
+    }
+    const handleBuscador=()=>{
+        setBuscador(!buscador)
+    }
+
+    //sockt io
+    const  submitTareasProyecto=(tarea)=>{
+        //se actualizan las tareas para todolos los usuarios 
+        let copiaProyecto = {...proyecto};
+            copiaProyecto.tareas = proyecto.tareas.map(state =>{
+               return state._id === tarea.id? console.log('a') : state
+            })
+         const resultado=[...proyectoActualizado.tareas,tarea]
+
+            console.log(resultado)
+            setProyecto(resultado)
+            }
     return ( 
         <ProyectosContext.Provider
-        value={{proyectos,eliminarColaborador, handleModalEliminarColaborador,modalEliminarColaborador ,agregarColaborador,submitColaborador,colaborador,eliminarTarea,handleModalEditarTarea,tarea,mostrarAlerta,modalliminarTarea,handleModalEliminarTarea, submitTarea, cargando,submitProyectos,alerta, modalFormularioTarea,handleModalTarea, eliminarProyecto, obtenerProyecto,setProyecto,proyecto}}>
+        value={{proyectos,submitTareasProyecto,buscador,handleBuscador,completarTarea,eliminarColaborador, handleModalEliminarColaborador,modalEliminarColaborador ,agregarColaborador,submitColaborador,colaborador,eliminarTarea,handleModalEditarTarea,tarea,mostrarAlerta,modalliminarTarea,handleModalEliminarTarea, submitTarea, cargando,submitProyectos,alerta, modalFormularioTarea,handleModalTarea, eliminarProyecto, obtenerProyecto,setProyecto,proyecto}}>
             {children}
         </ProyectosContext.Provider>
     )

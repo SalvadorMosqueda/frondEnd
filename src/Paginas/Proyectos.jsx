@@ -1,15 +1,20 @@
-import React from 'react'
+import {useEffect}from 'react'
 import useProyectos from '../hooks/useProyectos'
 import PreviwProyecto from '../Componentes/PreviwProyecto'
+import Alerta from '../Componentes/Alerta'
 const Proyectos = () => {
     //extremos proyectos de provaider
-    const {proyectos}=useProyectos()
-   
+    const {proyectos,alerta}=useProyectos()
 
+    
+
+
+    const{msg} =alerta
   return (
 
     <>
         <h1  className='text-4xl font-black '>Proyectos</h1>
+        {msg && <Alerta alerta={alerta}/>}
         <div className='bg-white shadow rounded-lg mt-5'>   
             {proyectos.length ? 
             //creamos un componente por cada tarea
